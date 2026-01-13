@@ -35,6 +35,7 @@ jobs:
       - name: Generate and Post Newsletter
         working-directory: ./webmcp-newsletter
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.WEBMCP_NEWSLETTER_PAT || secrets.GITHUB_TOKEN }}
           DATE_OVERRIDE: ${{ inputs.date_override }}
+          TARGET_REPOSITORY: 'joellobo1234/ucp-connect-woocommerce'
         run: node index.js

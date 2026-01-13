@@ -239,7 +239,8 @@ async function main() {
   }
 
   // Post to Discussions
-  const [currentOwner, currentRepo] = process.env.GITHUB_REPOSITORY.split("/");
+  const targetRepo = process.env.TARGET_REPOSITORY || process.env.GITHUB_REPOSITORY;
+  const [currentOwner, currentRepo] = targetRepo.split("/");
   const { repository } = await graphqlWithAuth(`
     query($owner: String!, $repo: String!) {
       repository(owner: $owner, name: $repo) {

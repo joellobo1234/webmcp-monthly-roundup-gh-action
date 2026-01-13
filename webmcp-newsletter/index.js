@@ -26,9 +26,13 @@ async function main() {
   console.log(`Generating roundup for ${niceMonthName} (${formattedStart} to ${formattedEnd})...`);
 
   // We want to capture ALL activity unique items
-  const createdQuery = `repo:webmachinelearning/webmcp created:${formattedStart}..${formattedEnd}`;
-  const closedQuery = `repo:webmachinelearning/webmcp closed:${formattedStart}..${formattedEnd}`;
-  const mergedQuery = `repo:webmachinelearning/webmcp is:pr merged:${formattedStart}..${formattedEnd}`;
+  // We want to capture PR activity specifically (Opened, Closed, Merged)
+  const prCreatedQuery = `repo:webmachinelearning/webmcp is:pr created:${formattedStart}..${formattedEnd}`;
+  const prClosedQuery = `repo:webmachinelearning/webmcp is:pr closed:${formattedStart}..${formattedEnd}`;
+  const prMergedQuery = `repo:webmachinelearning/webmcp is:pr merged:${formattedStart}..${formattedEnd}`;
+
+  // For Issues, we want anything that had activity (updated)
+  const issuesBodyQuery = `repo:webmachinelearning/webmcp is:issue updated:${formattedStart}..${formattedEnd}`;
 
   // Also fetch discussions to capture contributors
   const discussionQuery = `repo:webmachinelearning/webmcp type:discussion updated:${formattedStart}..${formattedEnd}`;
@@ -61,6 +65,7 @@ async function main() {
                 url
                 state
                 createdAt
+                updatedAt
                 closedAt
                 author { login url }
                 comments(first: 20) { nodes { author { login url } } }
@@ -81,10 +86,11 @@ async function main() {
   // unless we use a specific Repository.discussions query, which is safer.
   // Instead, rely on Issue/PR participants which is the bulk of "contributors".
 
-  const [createdItems, closedItems, mergedItems] = await Promise.all([
-    fetchItems(createdQuery),
-    fetchItems(closedQuery),
-    fetchItems(mergedQuery)
+  const [prCreatedItems, prClosedItems, prMergedItems, issueItems] = await Promise.all([
+    fetchItems(prCreatedQuery),
+    fetchItems(prClosedQuery),
+    fetchItems(prMergedQuery),
+    fetchItems(issuesBodyQuery)
   ]);
 
   // Combine and Deduplicate
@@ -97,7 +103,7 @@ async function main() {
     }
   };
 
-  [...createdItems, ...closedItems, ...mergedItems].forEach(item => {
+  [...prCreatedItems, ...prClosedItems, ...prMergedItems, ...issueItems].forEach(item => {
     allItems.set(item.url, item);
     addContributor(item.author);
 
@@ -168,6 +174,10 @@ async function main() {
         icon = "🚧";
         statusText = "Opened on";
         date = item.createdAt;
+      } else {
+        icon = "🔄";
+        statusText = "Active";
+        date = item.updatedAt;
       }
     }
 

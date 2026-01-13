@@ -1,0 +1,40 @@
+name: Monthly WebMCP Newsletter
+
+on:
+  schedule:
+    # Runs at 00:00 UTC on the 1st day of every month
+    - cron: '0 0 1 * *'
+  # Allow manual trigger with optional date for backfilling
+  workflow_dispatch:
+    inputs:
+      date_override:
+        description: 'Reference Date (YYYY-MM-DD). Defaults to today if empty. The report covers the month PRIOR to this date.'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+  discussions: write
+
+jobs:
+  generate-newsletter:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        working-directory: ./webmcp-newsletter
+        run: npm ci
+
+      - name: Generate and Post Newsletter
+        working-directory: ./webmcp-newsletter
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DATE_OVERRIDE: ${{ inputs.date_override }}
+        run: node index.js

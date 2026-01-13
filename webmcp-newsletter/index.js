@@ -160,7 +160,7 @@ async function main() {
         statusText = "Opened on";
         date = item.createdAt;
       } else {
-        icon = "🔄";
+        icon = "⚡";
         statusText = "Active";
         date = item.updatedAt;
       }
@@ -177,7 +177,7 @@ async function main() {
         statusText = "Opened on";
         date = item.createdAt;
       } else {
-        icon = "🔄";
+        icon = "⚡";
         statusText = "Active";
         date = item.updatedAt;
       }

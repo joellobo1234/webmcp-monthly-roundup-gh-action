@@ -122,7 +122,7 @@ async function main() {
     else issues.push(item);
   }
 
-  // Sort by Priority: Completed (1) -> Opened (2) -> Active (3)
+  // Sort by Priority: Merged (1) -> Opened (2) -> Active (3) -> Closed (4)
   const getPriority = (item) => {
     const createdInMonth = item.createdAt >= formattedStart && item.createdAt <= formattedEnd;
 
@@ -130,12 +130,13 @@ async function main() {
       const mergedInMonth = item.mergedAt && item.mergedAt >= formattedStart && item.mergedAt <= formattedEnd;
       const closedInMonth = item.closedAt && item.closedAt >= formattedStart && item.closedAt <= formattedEnd;
 
-      if (mergedInMonth || closedInMonth) return 1;
+      if (mergedInMonth) return 1;
+      if (closedInMonth) return 4;
       if (createdInMonth) return 2;
       return 3;
     } else {
       const closedInMonth = item.closedAt && item.closedAt >= formattedStart && item.closedAt <= formattedEnd;
-      if (closedInMonth) return 1;
+      if (closedInMonth) return 4;
       if (createdInMonth) return 2;
       return 3;
     }

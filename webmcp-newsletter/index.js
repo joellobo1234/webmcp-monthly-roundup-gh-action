@@ -27,9 +27,8 @@ async function main() {
 
   // We want to capture ALL activity unique items
   // We want to capture PR activity specifically (Opened, Closed, Merged)
-  const prCreatedQuery = `repo:webmachinelearning/webmcp is:pr created:${formattedStart}..${formattedEnd}`;
-  const prClosedQuery = `repo:webmachinelearning/webmcp is:pr closed:${formattedStart}..${formattedEnd}`;
-  const prMergedQuery = `repo:webmachinelearning/webmcp is:pr merged:${formattedStart}..${formattedEnd}`;
+  // Capture any PR activity (Opened, Closed, Merged, Updated)
+  const prsBodyQuery = `repo:webmachinelearning/webmcp is:pr updated:${formattedStart}..${formattedEnd}`;
 
   // For Issues, we want anything that had activity (updated)
   const issuesBodyQuery = `repo:webmachinelearning/webmcp is:issue updated:${formattedStart}..${formattedEnd}`;
@@ -52,6 +51,7 @@ async function main() {
                 url
                 state
                 createdAt
+                updatedAt
                 closedAt
                 mergedAt
                 author { login url }
@@ -86,10 +86,8 @@ async function main() {
   // unless we use a specific Repository.discussions query, which is safer.
   // Instead, rely on Issue/PR participants which is the bulk of "contributors".
 
-  const [prCreatedItems, prClosedItems, prMergedItems, issueItems] = await Promise.all([
-    fetchItems(prCreatedQuery),
-    fetchItems(prClosedQuery),
-    fetchItems(prMergedQuery),
+  const [prItems, issueItems] = await Promise.all([
+    fetchItems(prsBodyQuery),
     fetchItems(issuesBodyQuery)
   ]);
 
@@ -103,7 +101,7 @@ async function main() {
     }
   };
 
-  [...prCreatedItems, ...prClosedItems, ...prMergedItems, ...issueItems].forEach(item => {
+  [...prItems, ...issueItems].forEach(item => {
     allItems.set(item.url, item);
     addContributor(item.author);
 
@@ -161,6 +159,10 @@ async function main() {
         icon = "🚧";
         statusText = "Opened on";
         date = item.createdAt;
+      } else {
+        icon = "🔄";
+        statusText = "Active";
+        date = item.updatedAt;
       }
     } else {
       // Issues

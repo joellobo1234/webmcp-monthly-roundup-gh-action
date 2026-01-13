@@ -122,8 +122,34 @@ async function main() {
     else issues.push(item);
   }
 
-  prs.sort((a, b) => a.number - b.number);
-  issues.sort((a, b) => a.number - b.number);
+  // Sort by Priority: Completed (1) -> Opened (2) -> Active (3)
+  const getPriority = (item) => {
+    const createdInMonth = item.createdAt >= formattedStart && item.createdAt <= formattedEnd;
+
+    if (item.__typename === 'PullRequest') {
+      const mergedInMonth = item.mergedAt && item.mergedAt >= formattedStart && item.mergedAt <= formattedEnd;
+      const closedInMonth = item.closedAt && item.closedAt >= formattedStart && item.closedAt <= formattedEnd;
+
+      if (mergedInMonth || closedInMonth) return 1;
+      if (createdInMonth) return 2;
+      return 3;
+    } else {
+      const closedInMonth = item.closedAt && item.closedAt >= formattedStart && item.closedAt <= formattedEnd;
+      if (closedInMonth) return 1;
+      if (createdInMonth) return 2;
+      return 3;
+    }
+  };
+
+  const sortItems = (a, b) => {
+    const pA = getPriority(a);
+    const pB = getPriority(b);
+    if (pA !== pB) return pA - pB;
+    return a.number - b.number;
+  };
+
+  prs.sort(sortItems);
+  issues.sort(sortItems);
 
   console.log(`Found ${prs.length} Unique PRs and ${issues.length} Unique Issues.`);
 
